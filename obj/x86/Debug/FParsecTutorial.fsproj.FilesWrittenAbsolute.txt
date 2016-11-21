@@ -1,0 +1,7 @@
+/home/jacque/Projects/F-sharp/FParsecTutorial/FParsecTutorial/obj/x86/Debug/.NETFramework,Version=v4.5.1.AssemblyAttribute.fs
+/home/jacque/Projects/F-sharp/FParsecTutorial/FParsecTutorial/bin/Debug/FParsecTutorial.exe.mdb
+/home/jacque/Projects/F-sharp/FParsecTutorial/FParsecTutorial/bin/Debug/FParsecTutorial.exe
+/home/jacque/Projects/F-sharp/FParsecTutorial/FParsecTutorial/obj/x86/Debug/FParsecTutorial.exe
+/home/jacque/Projects/F-sharp/FParsecTutorial/FParsecTutorial/obj/x86/Debug/FParsecTutorial.exe.mdb
+/home/jacque/Projects/F-sharp/FParsecTutorial/FParsecTutorial/bin/Debug/FParsec.dll
+/home/jacque/Projects/F-sharp/FParsecTutorial/FParsecTutorial/bin/Debug/FParsecCS.dll
