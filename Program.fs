@@ -54,7 +54,9 @@ test floatBetweenBrackets3 "[]"
 test floatBetweenBrackets3 "[1.0"
 test floatBetweenDblBrackets "[[1.0]]"
 
-
+(* Notes on refactoring:
+ 
+*)
 [<EntryPoint>]
 let main argv = 
     printfn "%A" argv
