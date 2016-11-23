@@ -54,9 +54,49 @@ test floatBetweenBrackets3 "[]"
 test floatBetweenBrackets3 "[1.0"
 test floatBetweenDblBrackets "[[1.0]]"
 
-(* Notes on refactoring:
- 
+(*Need to examine this further and experiment more
+let between pbegin pend p = pbegin >>. p .>> pend
+let betwStrgs s1 s2 p = p |> between (str s1) (str s2)
+betwStrgs "[abc; def]" "[poopy; cakes]" |> printfn "%A"
+let run2 p (s:string) : string [] = s.Split(';')
+run2 p "[a; bc; d; ef]" |> printfn "%A" 
 *)
+
+// Parsing a list of floats
+test (many floatBetweenBrackets3) ""
+test (many floatBetweenBrackets3) "[1.0]"
+test (many floatBetweenBrackets3) "[2][3][4]"
+test (many floatBetweenBrackets3) "[1][2.0E]"
+
+test (many1 floatBetweenBrackets3) "(1)"
+
+test (many1 (floatBetweenBrackets3 <?> "float between brackets")) "(1)"
+
+let floatList = str "[" >>. sepBy pfloat (str ",") .>> str "]"
+
+test floatList "[]"
+test floatList "[1.0]"
+test floatList "[4,5,6]"
+test floatList "[1.0,"
+test floatList "[your momma]"
+
+// Handling whitespaces
+let ws = spaces
+
+let str_ws s = pstring s .>> ws
+let float_ws = pfloat .>> ws
+let numberList = str_ws "[" >>. sepBy float_ws (str_ws ",") .>> str_ws "]"
+
+test numberList @"[ 1 ,
+                          2 ] "
+
+test numberList @"[ 1,
+                         2; 3]"
+
+let numberListFile = ws >>. numberList .>> eof
+test numberListFile " [1, 2, 3] [4]"
+
+
 [<EntryPoint>]
 let main argv = 
     printfn "%A" argv
