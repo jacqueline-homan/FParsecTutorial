@@ -13,7 +13,7 @@ let test (p:Parser<_,_>) str =
 
 test pfloat "1.25" //This should show Success
 test pfloat "1.25E 3" //This should give an error message
-test pfloat "42" //Nota Bene: Integers are treated as floats
+test pfloat "42" //Nota Bena: Integers are treated as floats
 
 
 (*This lets us know of a word exists in a string collection. 
@@ -78,7 +78,7 @@ test floatList "[]"
 test floatList "[1.0]"
 test floatList "[4,5,6]"
 test floatList "[1.0,"
-test floatList "[your momma]"
+test floatList "[your momma]" //Expect a fail: "your momma" isn't a number
 
 // Handling whitespaces
 let ws = spaces
@@ -96,7 +96,26 @@ test numberList @"[ 1,
 let numberListFile = ws >>. numberList .>> eof
 test numberListFile " [1, 2, 3] [4]"
 
+//Parsing strings
+test (many (str "a" <|> str "b")) "abba"
 
+//To parse a case-insensitive string, use pstring CI and skipStringCI
+test (skipStringCI "<float>" >>. pfloat) "<FLOAT>1.0" //returns Success: 1.0
+
+//To parse an identifier
+let identifier =
+    //returns Boolean value of True if c is a letter or underscore
+    let isIdentifierFirstChar c = isLetter c || c = '_'
+    //returns Boolean value of True if c is a letter, digit, or underscore
+    let isIdentifierChar c = isLetter c || isDigit c || c = '_'
+    //calls combinator and two functions that return a Boolean, and skips trailing whitespace
+    many1Satisfy2L isIdentifierFirstChar isIdentifierChar "identifier" .>> ws
+test identifier "_" //returns Success
+test identifier "_test1" //returns Success
+test identifier "1" //returns Failure - "Expecting: identifier"
+
+(*To parse identifiers based on the Unicode XID syntax:
+*)
 [<EntryPoint>]
 let main argv = 
     printfn "%A" argv
