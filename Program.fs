@@ -113,9 +113,85 @@ let identifier =
 test identifier "_" //returns Success
 test identifier "_test1" //returns Success
 test identifier "1" //returns Failure - "Expecting: identifier"
+printfn "\n"
 
 (*To parse identifiers based on the Unicode XID syntax:
+stringLiteral: '"' (normalChar|escapedChar)* '"'
+normalChar:    any char except '\' and '"'
+escapedChar:   '\\' ('\\'|'"'|'n'|'r'|'t')
 *)
+let stringLiteral =
+    let normalChar = satisfy (fun c -> c <> '\\' && c <> '"')
+    let unescape c = match c with
+                     | 'n' -> '\n'
+                     | 'r' -> '\r'
+                     | 't' -> '\t'
+                     | c   -> c
+    let escapedChar = pstring "\\" >>. (anyOf "\\nrt\"" |>> unescape)
+    between (pstring "\"") (pstring "\"")
+            (manyChars (normalChar <|> escapedChar))
+
+test stringLiteral "\"abc\""
+test stringLiteral "\"abc\\\"def\\\\ghi\""
+test stringLiteral "\"abc\\def\""
+
+(* Instead of parsing the string literal char-by-char, we can also
+parse it "snippet-by-snippet." Here, we used then manyStrings combinator
+which parses as sequence of stringsSepBy with then given string parser 
+and returns then stringsSepBy in concatenated form:
+*)
+let stringLiteral2 =
+    let normalCharSnippet = many1Satisfy (fun c -> c <> '\\' && c <> '"')
+    let escapedChar = pstring "\\" >>. (anyOf "\\nrt\"" |>> function
+                                                            | 'n' -> "\n"
+                                                            | 'r' -> "\r"
+                                                            | 't' -> "\t"
+                                                            | c   -> string c)
+    between (pstring "\"") (pstring "\"")
+            (manyStrings (normalCharSnippet <|> escapedChar))
+
+test stringLiteral2 "\"abc\""
+test stringLiteral2 "\"abc\\\"def\\\\ghi\""
+test stringLiteral2 "\"abc\\def\""
+printfn "\n"
+
+(*Parsing a string chunk‐wise using an optimized parser like many1Satisfy is 
+usually faster than parsing it char‐wise using manyChars and satisfy. 
+In this case we can optimize our parser even further – once we realize 
+that two normal char snippets must be separated by at least one escaped char.
+
+The stringsSepBy combinator parses a sequence of strings 
+(with the first argument parser) separated by other strings 
+(parsed with the second argument parser). It returns all parsed strings, including
+the separator strings, as a single, concatenated string.
+
+Note that stringLiteral3 uses manySatisfy instead of many1Satisfy in its 
+normalCharSnippet definition, so that it can parse escaped chars that
+are not separated by normal chars. 
+
+This can’t lead to an infinite loop because escapedChar 
+can’t succeed without consuming input.
+*)
+let stringLiteral3 =
+    let normalCharSnippet = manySatisfy (fun c -> c <> '\\' && c <> '"')
+    let escapedChar = pstring "\\" >>. (anyOf "\\nrt\"" |>> function
+                                                            | 'n' -> "\n"
+                                                            | 'r' -> "\r"
+                                                            | 't' -> "\t"
+                                                            | c   -> string c)
+    between (pstring "\"") (pstring "\"")
+            (stringsSepBy normalCharSnippet escapedChar)
+
+test stringLiteral3 "\"abc\""
+test stringLiteral3 "\"abc\\\"def\\\\ghi\""
+test stringLiteral3 "\"abc\\def\""
+printfn "\n"
+
+(*Sequentially applying parsers and the use of the pipe2
+through pipe5 combinators.
+*)
+
+
 [<EntryPoint>]
 let main argv = 
     printfn "%A" argv
