@@ -189,8 +189,35 @@ printfn "\n"
 
 (*Sequentially applying parsers and the use of the pipe2
 through pipe5 combinators.
-*)
 
+val pipe2: Parser<'a,'u> -> Parser<'b,'u> -> ('a -> b -> 'c) -> Parser<'c,'u> 
+*)
+printfn "Using pipe2 to parse the product of two numbers:"
+let product = pipe2 float_ws (str_ws "*" >>. float_ws)
+                    (fun x y -> x * y)
+
+test product "3 * 5"
+
+printfn "\n"
+(*The pipe2-5 combinators are very useful for constructing AST objects. 
+In the following example we use pipe3 to parse a string constant definition 
+into a StringConstant object: *)
+printfn "Using pipe3 to parse a string constant definition into a StringConstant object:"
+
+type StringConstant = StringConstant of string * string
+
+let stringConstant = pipe3 identifier (str_ws "=") stringLiteral
+                           (fun id _ str -> StringConstant(id, str))
+
+test stringConstant "myString = \"stringValue\""
+
+printfn "\n"
+
+let tupled1 = pipe2 float_ws (str_ws "," >>. float_ws)
+                    (fun x y -> (x, y))
+test tupled1 "3 , 5"
+
+test (float_ws .>>. (str_ws "," >>. float_ws)) "123, 456" 
 
 [<EntryPoint>]
 let main argv = 
