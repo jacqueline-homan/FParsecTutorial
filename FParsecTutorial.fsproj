@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="ExtraNotes.fsx" />
   </ItemGroup>
   <Import Project="$(FSharpTargetsPath)" />
 </Project>

@@ -1,16 +1,16 @@
 ﻿open System
 open System.IO
 open FParsec
-
+//We use type abbreviations to save ourselves some headaches:
 type UserState = unit 
 type Parser<'t> = Parser<'t, UserState>
 
-// Parsing a single float
+//Notice the type annotation for the function `test`:
 let test (p:Parser<_,_>) str =
     match run p str with 
     | Success(result, _, _) -> printfn "Success: %A" result
     | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
-
+// Parsing a single float
 test pfloat "1.25" //This should show Success
 test pfloat "1.25E 3" //This should give an error message
 test pfloat "42" //Nota Bena: Integers are treated as floats
@@ -216,8 +216,45 @@ printfn "\n"
 let tupled1 = pipe2 float_ws (str_ws "," >>. float_ws)
                     (fun x y -> (x, y))
 test tupled1 "3 , 5"
-
+(*The tuple2 parser is also available under the operator name .>>.
+so that you can write p1 .>>. p2 instead of  tuple2 p1 p2. 
+In the following example we parse a pair of comma separated numbers with this operator:
+*)
 test (float_ws .>>. (str_ws "," >>. float_ws)) "123, 456" 
+printfn "\n"
+
+(*If you need a pipe or tuple parser with more than 5 arguments, 
+you can easily construct one using the existing ones. 
+For example, here's how you might define a pipe7 parser:
+*) 
+let pipe7 p1 p2 p3 p4 p5 p6 p7 f =
+    pipe4 p1 p2 p3 (tuple4 p4 p5 p6 p7)
+          (fun x1 x2 x3 (x4, x5, x6, x7) -> f x1 x2 x3 x4 x5 x6 x7)
+
+//Using the choice combinator, <|>, for a parser for Booleans:
+let boolean = (stringReturn "true"  true)
+              <|> (stringReturn "false" false)
+test boolean "false"
+test boolean "true"
+test boolean "tru"
+printfn "\n"
+
+(* Dealing wih F#'s value restriction errors for FParsec
+Web already took care if this in the beginning of the
+tutorial by using the type abbreviations up top.
+Now, using type annotations to prevent compiler barfing
+on F#'s value restriction errors is simpler:
+*)
+let m : Parser<_> = pstring "test"
+run m "test" |> printfn "%A"
+(*If we need to have a generic type without having to 
+worry about compiler errors for value restrictions,
+we use then F# "escape hatch" - the [<GeneralizableValue>] attribute.*) 
+[<GeneralizableValue>]
+let h<'T, 'u> = pstring "test"
+run h "test" |> printfn "%A"
+printfn "\n"
+
 
 [<EntryPoint>]
 let main argv = 
