@@ -253,6 +253,7 @@ we use the F# "escape hatch" - the [<GeneralizableValue>] attribute.*)
 [<GeneralizableValue>]
 let h<'T, 'u> = pstring "test"
 run h "test" |> printfn "%A"
+//You can also obviate compiler errors using this: let h x = pstring "test" x 
 printfn "\n"
 
 //Writing a JSON parser
@@ -264,7 +265,7 @@ type Json =
     | JList   of Json list
     | JObject of Map<string, Json>
 
-let jstring<'T,'u> = stringReturn " "JString
+//let jstring<'T,'u> = stringReturn " " JString
 let jnull<'T, 'u> = stringReturn "null" JNull
 let jool<'T, 'u> =  (stringReturn "true"  (JBool true))
                     <|> (stringReturn "false" (JBool false))
@@ -294,6 +295,9 @@ let stringLiteral4<'T, 'u> =
     between (str "\"") (str "\"")
             (stringsSepBy normalCharSnippet escapedCharSnippet)
 
+let jstring<'T,'u> = 
+    stringLiteral4 |>> JString
+
 let jvalue, jvalueRef = createParserForwardedToRef<Json, unit>()
 
 let listBetweenStrings sOpen sClose pElement f =
@@ -310,12 +314,18 @@ do jvalueRef := choice [jobject
                         jlist
                         jstring
                         jnumber
-                        jtrue
-                        jfalse
+                        jool
                         jnull]
 let json = ws >>. jvalue .>> ws .>> eof
 
+(* Since the tutorial author directs you to a sample JSON file
+that he forgot to include then link for, Ive added my own 
+for the purpose of demonstrating this JSON parser*)
+let path = @"/home/jacque/Downloads/pizzas.json"
+let file = File.ReadAllText(path)
 
+
+run stringLiteral4 file|> printfn "%A"
 
 [<EntryPoint>]
 let main argv = 
