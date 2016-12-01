@@ -253,7 +253,9 @@ we use the F# "escape hatch" - the [<GeneralizableValue>] attribute.*)
 [<GeneralizableValue>]
 let h<'T, 'u> = pstring "test"
 run h "test" |> printfn "%A"
-//You can also obviate compiler errors using this: let h x = pstring "test" x 
+(*You can also avoid compiler errors about value restrictions
+by turning values into functions, like this: 
+let h x = pstring "test" x *)
 printfn "\n"
 
 //Writing a JSON parser
@@ -267,7 +269,7 @@ type Json =
 
 //let jstring<'T,'u> = stringReturn " " JString
 let jnull<'T, 'u> = stringReturn "null" JNull
-let jool<'T, 'u> =  (stringReturn "true"  (JBool true))
+let jbool<'T, 'u> =  (stringReturn "true"  (JBool true))
                     <|> (stringReturn "false" (JBool false))
 let jnumber<'T, 'u> = pfloat |>> JNumber
 let stringLiteral4<'T, 'u> =
@@ -306,7 +308,7 @@ let listBetweenStrings sOpen sClose pElement f =
 
 let jlist   = listBetweenStrings "[" "]" jvalue JList
 
-let keyValue = stringLiteral .>>. (ws >>. str ":" >>. ws >>. jvalue)
+let keyValue = stringLiteral4 .>>. (ws >>. str ":" >>. ws >>. jvalue)
 
 let jobject = listBetweenStrings "{" "}" keyValue (Map.ofList >> JObject)
 
@@ -314,7 +316,7 @@ do jvalueRef := choice [jobject
                         jlist
                         jstring
                         jnumber
-                        jool
+                        jbool
                         jnull]
 let json = ws >>. jvalue .>> ws .>> eof
 
